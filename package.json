@@ -19,5 +19,9 @@
   "homepage": "https://github.com/rsmith93/WebScrapingExample#readme",
   "dependencies": {
     "puppeteer": "^17.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.23.0",
+    "eslint-config-google": "^0.14.0"
   }
 }

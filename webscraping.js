@@ -1,121 +1,136 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer");
 
-//set up global constants required by webscraping method
-const urls = ["https://www.airbnb.co.uk/rooms/20669368", "https://www.airbnb.co.uk/rooms/50633275","https://www.airbnb.co.uk/rooms/33571268"] 
-const errLog = [];
-const objArr = [];
+// set up global constants required by webscraping method
+const urls = ["https://www.airbnb.co.uk/rooms/20669368",
+              "https://www.airbnb.co.uk/rooms/50633275",
+              "https://www.airbnb.co.uk/rooms/33571268"];
+const header = `#site-content > div > div:nth-child(1) > div:nth-child(1) > 
+                div:nth-child(1) > div > div > div > div > section >
+                div._b8stb0 > span > h1`;
+const type = `#site-content > div > div:nth-child(1) > div:nth-child(3) > 
+              div > div._16e70jgn > div > div:nth-child(1) > div > div 
+              > section > div > div > div > div._tqmy57 > div > h2`;
 
-//object created for returning the required info
-class AirBnBObj {
-    constructor(title, type, info, amenities, errors) {
-        this.title = title;
-        this.type = type;
-        this.info = info;
-        this.amenities = amenities
-        this.errors = errors
-    }
-}
-  
-const header = "#site-content > div > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div > div > div > div > section > div._b8stb0 > span > h1";
-const type = "#site-content > div > div:nth-child(1) > div:nth-child(3) > div > div._16e70jgn > div > div:nth-child(1) > div > div > section > div > div > div > div._tqmy57 > div > h2";
-
-const infoArr = [];
-const ammenitiesArr = [];
-
-//async function for scraping url and storing wanted details
-//Into a js object array
-//details required: Name, Type, Size info and Amenities
+// async function for scraping url and storing wanted details
+// Into a js object array
+// details required: Name, Type, Size info and Amenities
 async function scrape(url) {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     let infoFound = true;
-    let propertyName = "";    
-    
-    //if url is not found or valid then log error
-    try{
+    let propertyName = "";
+    let propertyType = "";
+    const infoArr = [];
+    const ammenitiesArr = [];
+    const errLog = [];
+
+    // if url is not found or valid then log error
+    // set info found variable to false so that the 
+    // remaining calls to puppeteer do not execute/hang
+    try {
         await page.goto(url);
-    }
-    catch(ex){
+    } catch (ex) {
         infoFound = false;
-        console.log("Page could not load, please check url and try again")
-    }    
-    
-    try{
-        var headerElem = await page.waitForSelector(header);      
-        if(headerElem !== null && headerElem !== undefined){  
-            propertyName = await page.evaluate(headerElem => headerElem.textContent, headerElem);
-            if(propertyName == null || propertyName == undefined){
+        console.log("Page could not load, please check url and try again");
+    }
+
+    // Get the header/ name of the property
+    // if it cant be found then the page is not 
+    // the correct format for the sacraping exercise 
+    // so should be skipped
+    try {
+        const headerElem = await page.waitForSelector(header);
+        if (headerElem !== null && headerElem !== undefined) {
+            propertyName = await page.evaluate((headerElem) =>
+                headerElem.textContent, headerElem);
+            if (propertyName == null || propertyName == undefined) {
                 infoFound = false;
             }
-        }
-        else{
+        } else {
             infoFound = false;
         }
-    }
-    catch(ex){
+    } catch (ex) {
         infoFound = false;
         console.log("Error getting property: Name - on " + url);
     }
 
-    if(infoFound){  
-    
-        try{
-            var typeElem = await page.waitForSelector(type);
-            var propertyType = await page.evaluate(typeElem => typeElem.textContent, typeElem);
-            if(propertyType.indexOf("hosted by") > -1){
-                var idx = propertyType.indexOf("hosted by")
+    // If it found the name of the property then the DOM is correct
+    // Get the property type (apartment, house etc)
+    if (infoFound) {
+        try {
+            const typeElem = await page.waitForSelector(type);
+            propertyType = await page.evaluate((typeElem) =>
+                typeElem.textContent, typeElem);
+            if (propertyType.indexOf("hosted by") > -1) {
+                const idx = propertyType.indexOf("hosted by");
                 propertyType = propertyType.substring(0, idx).trim();
             }
-        }
-        catch(ex){
+        } catch (ex) {
             errLog.push("Error getting property: Type - on " + url);
-        }       
-    
-        try{
-            this.infoArr = [];
-            var propertyInfoLength = (await page.$$('#site-content > div > div > div > div > div._16e70jgn > div > div > div > div > section > div > div > div > div._tqmy57 > ol > li')).length;                    
-            for(i = 2; i <= propertyInfoLength; i++){
-                var infoElem = await page.waitForSelector("#site-content > div > div > div > div > div._16e70jgn > div > div > div > div > section > div > div > div > div._tqmy57 > ol > li:nth-child(" + i + ") > span:nth-child(2)")
-                var infoElemText = await page.evaluate(infoElem => infoElem.textContent, infoElem)
-                if(!infoArr.includes(infoElemText)){
+        }
+
+        // Get the property info relating to size and rooms
+        try {
+            infoArr.length = 0;
+            const propertyInfoLength = (await page.$$(`#site-content > div > div > div > div > div._16e70jgn >
+                                                       div > div > div > div > section > div > div > div > 
+                                                       div._tqmy57 > ol > li`)).length;
+            for (i = 2; i <= propertyInfoLength; i++) {
+                const infoElem = await page.waitForSelector(`#site-content > div > div > div > div > 
+                                                             div._16e70jgn > div > div > div > div > 
+                                                             section > div > div > div > div._tqmy57
+                                                             > ol > li:nth-child(` + i + `) > 
+                                                             span:nth-child(2)`);
+                const infoElemText = await page.evaluate((infoElem) => infoElem.textContent, infoElem);
+                if (!infoArr.includes(infoElemText)) {
                     infoArr.push(infoElemText);
                 }
             }
-        }
-        catch(ex){
+        } catch (ex) {
             errLog.push("Error getting property: Info - on " + url);
         }
-    
-        try{
-            this.ammenitiesArr = [];
-            var amenitiesLength = (await page.$$("#site-content > div > div > div > div > div._16e70jgn > div > div > div > div > section > div._1byskwn > div")).length;
-            
-            for(var a = 1; a <= amenitiesLength; a++){
-                var amenityElem = await page.waitForSelector("#site-content > div > div > div > div > div._16e70jgn > div > div > div > div > section > div._1byskwn > div:nth-child(" + a + ") > div > div:nth-child(1)")            
-                var amenityElemText = await page.evaluate(amenityElem => amenityElem.textContent, amenityElem);
-                if(!ammenitiesArr.includes(amenityElemText)){
+
+        // Get the property amenities list
+        try {
+            ammenitiesArr.length = 0;
+            const amenitiesLength = (await page.$$(`#site-content > div > div > div > div > div._16e70jgn
+                                                    > div > div > div > div > section > div._1byskwn > div`)).length;
+
+            for (let a = 1; a <= amenitiesLength; a++) {
+                const amenityElem = await page.waitForSelector(`#site-content > div > div > div > div > div._16e70jgn
+                                                                > div > div > div > div > section > div._1byskwn >
+                                                                div:nth-child(` + a + `) > div > div:nth-child(1)`);
+                const amenityElemText = await page.evaluate((amenityElem) => amenityElem.textContent, amenityElem);
+                if (!ammenitiesArr.includes(amenityElemText)) {
                     ammenitiesArr.push(amenityElemText);
                 }
             }
-        }
-        catch(ex){
+        } catch (ex) {
             errLog.push("Error getting property: Ammenity - on " + url);
         }
-    
-        var obj = new AirBnBObj(propertyName, propertyType, infoArr, ammenitiesArr, errLog);
-        objArr.push(obj); 
+
+        await browser.close();
+        const obj = {title:propertyName, type:propertyType, info:infoArr, amenities:ammenitiesArr, errors:errLog};
+        return obj;
     }
-     
-    await browser.close()
+
+    await browser.close();
+    return null;
 }
 
 (async () => {
-    for(var u = 0; u < urls.length; u++){
-        await scrape(urls[u]);
+    const objArr = [];
+    for (const url in urls) {
+        if (url !== null && url !== undefined && url !== "") {
+            console.log("Start web scraping on " + urls[url]);
+            const result = await scrape(urls[url]);
+            if (result !== null && result !== undefined) {
+                objArr.push(result);
+            }
+            console.log("Finish web scraping on " + urls[url]);
+        } else {
+            console.log("Url not valid, please check and try again");
+        }
     }
     console.log(objArr);
 })();
-     
-
-    
-  
