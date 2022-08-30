@@ -12,17 +12,17 @@ const type = `#site-content > div > div:nth-child(1) > div:nth-child(3) >
               > section > div > div > div > div._tqmy57 > div > h2`;
 
 // async function for scraping url and storing wanted details
-// Into a js object array
+// Into a js object
 // details required: Name, Type, Size info and Amenities
 async function scrape(url) {
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    let infoFound = true;
-    let propertyName = "";
-    let propertyType = "";
+    const page = await browser.newPage();    
     const infoArr = [];
     const ammenitiesArr = [];
     const errLog = [];
+    let infoFound = true;
+    let propertyName = "";
+    let propertyType = "";
 
     // if url is not found or valid then log error
     // set info found variable to false so that the 
@@ -91,19 +91,28 @@ async function scrape(url) {
         }
 
         // Get the property amenities list
+        // First obtain the length, so we can loop through efficiently
+        // Then obtain text and add to array
         try {
             ammenitiesArr.length = 0;
-            const amenitiesLength = (await page.$$(`#site-content > div > div > div > div > div._16e70jgn
-                                                    > div > div > div > div > section > div._1byskwn > div`)).length;
+            await page.waitForSelector(`#site-content > div > div > div > div >
+                                        div._16e70jgn > div > div > div > div >
+                                        section > div._1byskwn > div`);
+            const amenitiesLength = (await page.$$(`#site-content > div > div > div
+                                                    > div > div._16e70jgn > div > div
+                                                    > div > div > section >
+                                                    div._1byskwn > div`)).length;            
 
             for (let a = 1; a <= amenitiesLength; a++) {
                 const amenityElem = await page.waitForSelector(`#site-content > div > div > div > div > div._16e70jgn
                                                                 > div > div > div > div > section > div._1byskwn >
                                                                 div:nth-child(` + a + `) > div > div:nth-child(1)`);
-                const amenityElemText = await page.evaluate((amenityElem) => amenityElem.textContent, amenityElem);
-                if (!ammenitiesArr.includes(amenityElemText)) {
-                    ammenitiesArr.push(amenityElemText);
-                }
+                if(amenityElem !== null && amenityElem !== undefined){
+                    const amenityElemText = await page.evaluate((amenityElem) => amenityElem.textContent, amenityElem);
+                    if (!ammenitiesArr.includes(amenityElemText)) {
+                        ammenitiesArr.push(amenityElemText);
+                    }
+                }                
             }
         } catch (ex) {
             errLog.push("Error getting property: Ammenity - on " + url);
@@ -127,7 +136,7 @@ async function scrape(url) {
             if (result !== null && result !== undefined) {
                 objArr.push(result);
             }
-            console.log("Finish web scraping on " + urls[url]);
+            console.log("Finished web scraping on " + urls[url]);
         } else {
             console.log("Url not valid, please check and try again");
         }
