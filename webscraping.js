@@ -109,7 +109,8 @@ async function scrape(url) {
                                                                 div:nth-child(` + a + `) > div > div:nth-child(1)`);
                 if(amenityElem !== null && amenityElem !== undefined){
                     const amenityElemText = await page.evaluate((amenityElem) => amenityElem.textContent, amenityElem);
-                    if (!ammenitiesArr.includes(amenityElemText)) {
+                    if (!ammenitiesArr.includes(amenityElemText) && 
+                       amenityElemText.indexOf("Unavailable") == -1) {
                         ammenitiesArr.push(amenityElemText);
                     }
                 }                
