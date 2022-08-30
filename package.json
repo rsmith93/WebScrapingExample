@@ -1,0 +1,23 @@
+{
+  "name": "webscrapingexample",
+  "version": "1.0.0",
+  "description": "Basic project set up to allow for web scraping practices to take place on some AirBnB urls.",
+  "main": "webscraping.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsmith93/WebScrapingExample.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rsmith93/WebScrapingExample/issues"
+  },
+  "homepage": "https://github.com/rsmith93/WebScrapingExample#readme",
+  "dependencies": {
+    "puppeteer": "^17.0.0"
+  }
+}
