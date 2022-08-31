@@ -25,4 +25,4 @@ I decided to include the ESLint npm package to stick to good coding practices wh
 **Time limitations**\
 Without spending too much time on this task there is a list of features that i would like to add to make it more complete
 1) Unit testing - perhaps using something like Cypress, Testim.io or WebdriverIO just to ensure that all code meets quality standards before it's deployed.
-2) Puppeteer, can make use of click events, on Airbnb the full list of amenities is shown on a modal popup that isnt visile in the DOM on load of the url. Puppeteer can manipulate the dom to click the button that triggers the modal and from there I could attempt to get a more substantial list of amenities, rather than just the key ones.
+2) Puppeteer, can make use of click events, on Airbnb the full list of amenities is shown on a modal popup that isnt visible in the DOM on load of the url. Puppeteer can manipulate the dom to click the button that triggers the modal and from there I could attempt to get a more substantial list of amenities, rather than just the key ones.
